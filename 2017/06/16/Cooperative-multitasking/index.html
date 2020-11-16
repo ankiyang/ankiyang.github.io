@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="对如何提供多个请求的并发处理，可以通过线程或进程的帮助来实现。然而，还有一种选择–cooperative multitasking（又称non-preemptive multitasking）。 我们在这里要说的是，操作系统绝对是很神奇的，因为有调度器schedulers&#x2F;计划器planners，它可以处理进程、线程，在它们之间切换等等。但是，它仍然不知道我们的应用程序是如何工作的，所以它会在一个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cooperative multitasking">
+<meta property="og:url" content="https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/index.html">
+<meta property="og:site_name" content="ANK">
+<meta property="og:description" content="对如何提供多个请求的并发处理，可以通过线程或进程的帮助来实现。然而，还有一种选择–cooperative multitasking（又称non-preemptive multitasking）。 我们在这里要说的是，操作系统绝对是很神奇的，因为有调度器schedulers&#x2F;计划器planners，它可以处理进程、线程，在它们之间切换等等。但是，它仍然不知道我们的应用程序是如何工作的，所以它会在一个">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2017-06-16T03:55:00.000Z">
+<meta property="article:modified_time" content="2020-11-16T10:22:51.110Z">
+<meta property="article:author" content="Anki Yang">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Cooperative multitasking</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+      
+<link rel="stylesheet" href="/css/rtl.css">
+
+    
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.2.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/Anki/">Anki</a></li>
+         
+          <li><a href="/archives/">My Writing</a></li>
+         
+          <li><a href="/articles/">Articles</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2019/11/20/Python-Notes-Navigation/"><i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2017/05/10/Multiple-requests-Multitasking/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&text=Cooperative multitasking"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&is_video=false&description=Cooperative multitasking"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Cooperative multitasking&body=Check out this article: https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&name=Cooperative multitasking&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&t=Cooperative multitasking"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Callbacks"><span class="toc-number">1.</span> <span class="toc-text">Callbacks</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cooperative-Threads"><span class="toc-number">2.</span> <span class="toc-text">Cooperative Threads</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        Cooperative multitasking
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Anki Yang</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2017-06-16T03:55:00.000Z" itemprop="datePublished">2017-06-16</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>对如何提供多个请求的并发处理，可以通过线程或进程的帮助来实现。然而，还有一种选择–cooperative multitasking（又称non-preemptive multitasking）。</p>
+<p>我们在这里要说的是，操作系统绝对是很神奇的，因为有调度器schedulers/计划器planners，它可以处理进程、线程，在它们之间切换等等。但是，它仍然不知道我们的应用程序是如何工作的，所以它会在一个随机的时刻（可能不是最好的时刻）暂停线程/进程，保存上下文，然后切换到下一个线程/进程（也就是抢占式多任务preemptive multitasking）。但是我们知道我们的应用程序是如何工作的。我们知道，我们有很短的时间在CPU上进行一些计算操作，但大多数时间我们都在等待网络I/O，我们更知道什么时候在处理各个请求之间切换。</p>
+<p>从操作系统的角度来看，cooperative multitasking只是一个执行线程，但在它的内部，应用程序有权力决定何时在处理单个请求/命令之间进行切换。比如一旦有数据到达，应用程序就会读取数据，解析请求，将数据发送到数据库，这就是一个阻塞操作，但它不需要等待数据库的响应，而是可以开始处理另一个请求。这就是所谓的”合作cooperation”，因为所有的任务/命令都必须合作，才能使整个计划方案发挥作用。它们相互穿插，但在一个单一的控制线程中，即所谓的合作调度器，其作用是启动进程，并给它们自愿收回控制权的机会。</p>
+<p>这比先发制人的多任务处理preemptive multitasking 更容易，因为开发人员总是知道什么时候一个任务被预先执行时，什么时候另一个任务没有被执行。虽然在单处理器系统中，一个多线程的应用程序也会以交错的方式执行，但使用线程的程序员仍然必须考虑到错误的问题，这样当切换到多核系统时，应用程序就不会错误地工作。然而，即使在多核系统上，单线程异步系统也总是以交错的方式执行。</p>
+<p>编写这类程序的复杂性在于，这种切换、维护上下文的过程，将每一个任务组织成一个用中断执行的小步骤序列，落在开发人员的肩上。另一方面，我们赢在效率上，因为没有不必要的上下文切换，比如线程和进程之间切换时的处理器上下文。</p>
+<p>实现协同多任务有两种方式–回调callbacks和协同线程cooperative threads。</p>
+<h2 id="Callbacks"><a href="#Callbacks" class="headerlink" title="Callbacks"></a>Callbacks</h2><p>所有的合作操作都会导致动作在未来某个时间发生，我们的执行线程应该在准备好后返回结果。所以为了得到结果，我们必须注册一个回调–如果请求/操作成功，它将调用一个函数，如果请求/操作不成功，它将调用另一个函数。回调是一种显式的方法，即开发者在写程序的时候，好像真的不知道回调函数什么时候会被调用。</p>
+<p>这是最广泛使用的方案，因为它是显式的，并且被大多数现代语言所支持。另外，还有Futures或Promises–它的内部结构是一样的，但有更清晰的API。</p>
+<p>优点和缺点：</p>
+<ul>
+<li>它不同于线程程序，也没有它们的问题。</li>
+<li>回调会吞噬异常。</li>
+<li>回调变得混乱，难以调试。</li>
+</ul>
+<h2 id="Cooperative-Threads"><a href="#Cooperative-Threads" class="headerlink" title="Cooperative Threads"></a>Cooperative Threads</h2><p>第二种方式是隐性的，当开发人员写程序时，似乎没有合作的多任务。这种方式有不同的影子：用户线程(也就是绿色线程green threads)或coroutines。</p>
+<p>使用绿色线程，我们可以像以前一样执行一个阻塞操作，并期望马上得到结果，就像它是非阻塞的一样。但 “背后 “有黑魔法–有一种框架或编程语言，可以让阻塞操作变得非阻塞，并将控制权转移到其他一些执行线程，但不是操作系统线程的意义，而是逻辑线程（用户级线程）的意义。这些线程由 “正常 “的用户进程执行，而不是由操作系统执行。</p>
+<p>在coroutine中，你应该编写一些程序，增加一些 “检查点”，在这里你的函数可以暂停和恢复。退出可以通过调用其他的coroutine来完成，这些coroutine以后可能会返回到调用原coroutine的点。coroutine与线程非常相似。然而，coroutine是合作性多任务的cooperatively multitasked，而线程则倾向于先发制人的多任务preemptively multitasked。不需要mutexes、semaphores等同步基元，也不需要操作系统的支持。</p>
+<p>优点和缺点：</p>
+<ul>
+<li>它们是在用户空间级别控制的，而不是操作系统。</li>
+<li>它们感觉像同步编程。</li>
+<li>除了切换CPU的上下文外，包含了普通线程编程的所有问题。</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/Anki/">Anki</a></li>
+         
+          <li><a href="/archives/">My Writing</a></li>
+         
+          <li><a href="/articles/">Articles</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Callbacks"><span class="toc-number">1.</span> <span class="toc-text">Callbacks</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cooperative-Threads"><span class="toc-number">2.</span> <span class="toc-text">Cooperative Threads</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&text=Cooperative multitasking"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&is_video=false&description=Cooperative multitasking"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Cooperative multitasking&body=Check out this article: https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&title=Cooperative multitasking"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&name=Cooperative multitasking&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://ankiyang.github.io/2017/06/16/Cooperative-multitasking/&t=Cooperative multitasking"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2020
+    Anki Yang
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/Anki/">Anki</a></li>
+         
+          <li><a href="/archives/">My Writing</a></li>
+         
+          <li><a href="/articles/">Articles</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+
+    <!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+
+<!-- clipboard -->
+
+  
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
