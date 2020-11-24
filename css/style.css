@@ -1100,6 +1100,9 @@ article .content video {
   max-width: 100%;
   height: auto;
 }
+article .content img[src^="https://img.shields.io"]  { 
+  display: inline;
+}
 article .content .video-container {
   position: relative;
   overflow: hidden;
