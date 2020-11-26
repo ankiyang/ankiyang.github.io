@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="Both Vue and React need to manage state, such as the need to share state between components. What is shared state? For example, if a component needs to use the state of another component, or if a comp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="The design philosophy of Redux and Vuex">
+<meta property="og:url" content="https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/index.html">
+<meta property="og:site_name" content="ANK">
+<meta property="og:description" content="Both Vue and React need to manage state, such as the need to share state between components. What is shared state? For example, if a component needs to use the state of another component, or if a comp">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-11-26T02:22:15.000Z">
+<meta property="article:modified_time" content="2020-11-26T02:36:34.408Z">
+<meta property="article:author" content="Anki Yang">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>The design philosophy of Redux and Vuex</title>
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+      
+<link rel="stylesheet" href="/css/rtl.css">
+
+    
+    <!-- rss -->
+    
+    
+<meta name="generator" content="Hexo 5.2.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">My Writing</a></li>
+         
+          <li><a href="/articles/">Articles</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" href="/2020/10/26/Can-a-container-exist-separated-from-a-process/"><i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&text=The design philosophy of Redux and Vuex"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&is_video=false&description=The design philosophy of Redux and Vuex"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=The design philosophy of Redux and Vuex&body=Check out this article: https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/"><i class="fas fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&name=The design philosophy of Redux and Vuex&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&t=The design philosophy of Redux and Vuex"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index py4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        The design philosophy of Redux and Vuex
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">Anki Yang</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2020-11-26T02:22:15.000Z" itemprop="datePublished">2020-11-26</time>
+        
+      
+    </div>
+
+
+      
+    <div class="article-category">
+        <i class="fas fa-archive"></i>
+        <a class="category-link" href="/categories/Frontend/">Frontend</a>
+    </div>
+
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <p>Both Vue and React need to manage <strong>state</strong>, such as the need to share <strong>state</strong> between components. What is shared state? For example, if a component needs to use the state of another component, or if a component needs to change the state of another component, the state is shared.<br>Sharing state between parent and child components, or between sibling components, often requires writing a lot of unnecessary code, such as elevating the state to the parent component, or writing a parent component to the sibling component, which sounds like a lot of verbosity. Without effective management of state, it is difficult to track and test when, for what reason, and how state changes without control. If we haven’t experienced this problem before, it’s easy to assume that it’s going to be messy.</p>
+<p>In software development, there are some general philosophy, such as <strong>isolating changes</strong>, and <strong>convention over configuration</strong>.<br>Isolating changes means making good use of abstraction, and finding the commonality of some changes, isolating them, and not affecting the rest of the code.<br>Convention over configuration means that we don’t have to write a bunch of configurations for a lot of things. For example, we agreed that only views can be placed in the view folder, not filters, and filters must be placed in the filter folder.That’s a convention约定. Once the agreement is made, we don’t have to write a bunch of configuration files, we can just look for all the views in the view folder.<br>Based on these philosophy, the solution for <strong>state management</strong> is to extract the state that needs to be shared between components, follow specific <strong>conventions</strong>, and manage it uniformly so that state changes are predictable. A number of patterns and libraries have been created along these lines.</p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">My Writing</a></li>
+         
+          <li><a href="/articles/">Articles</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&text=The design philosophy of Redux and Vuex"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&is_video=false&description=The design philosophy of Redux and Vuex"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=The design philosophy of Redux and Vuex&body=Check out this article: https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/"><i class="fas fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&title=The design philosophy of Redux and Vuex"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&name=The design philosophy of Redux and Vuex&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=https://ankiyang.github.io/2020/11/26/The-design-philosophy-of-Redux-and-Vuex/&t=The design philosophy of Redux and Vuex"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2020
+    Anki Yang
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/about/">About</a></li>
+         
+          <li><a href="/archives/">My Writing</a></li>
+         
+          <li><a href="/articles/">Articles</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+
+<link rel="stylesheet" href="/lib/justified-gallery/css/justifiedGallery.min.css">
+
+
+    <!-- jquery -->
+
+<script src="/lib/jquery/jquery.min.js"></script>
+
+
+<script src="/lib/justified-gallery/js/jquery.justifiedGallery.min.js"></script>
+
+<!-- clipboard -->
+
+  
+<script src="/lib/clipboard/clipboard.min.js"></script>
+
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="far fa-clone"></i>';
+    btn += '</span>'; 
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Google Analytics -->
+
+<!-- Baidu Analytics -->
+
+<!-- Umami Analytics -->
+
+<!-- Disqus Comments -->
+
+
+</body>
+</html>
