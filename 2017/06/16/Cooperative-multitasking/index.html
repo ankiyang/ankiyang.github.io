@@ -14,7 +14,7 @@
 <meta property="og:description" content="对如何提供多个请求的并发处理，可以通过线程或进程的帮助来实现。然而，还有一种选择–cooperative multitasking（又称non-preemptive multitasking）。 我们在这里要说的是，操作系统绝对是很神奇的，因为有调度器schedulers&#x2F;计划器planners，它可以处理进程、线程，在它们之间切换等等。但是，它仍然不知道我们的应用程序是如何工作的，所以它会在一个">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2017-06-16T03:55:00.000Z">
-<meta property="article:modified_time" content="2020-11-16T10:22:51.110Z">
+<meta property="article:modified_time" content="2020-11-29T21:58:58.956Z">
 <meta property="article:author" content="Anki Yang">
 <meta name="twitter:card" content="summary">
     
@@ -107,7 +107,7 @@
 
     </div>
     <div id="toc">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Callbacks"><span class="toc-number">1.</span> <span class="toc-text">Callbacks</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cooperative-Threads"><span class="toc-number">2.</span> <span class="toc-text">Cooperative Threads</span></a></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Callbacks"><span class="toc-number">1.</span> <span class="toc-text">Callbacks</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cooperative-Threads"><span class="toc-number">2.</span> <span class="toc-text">Cooperative Threads</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Reactor-Proactor-patterns"><span class="toc-number">3.</span> <span class="toc-text">Reactor&#x2F;Proactor patterns</span></a></li></ol>
     </div>
   </span>
 </div>
@@ -169,6 +169,13 @@
 <li>它们感觉像同步编程。</li>
 <li>除了切换CPU的上下文外，包含了普通线程编程的所有问题。</li>
 </ul>
+<h2 id="Reactor-Proactor-patterns"><a href="#Reactor-Proactor-patterns" class="headerlink" title="Reactor/Proactor patterns"></a>Reactor/Proactor patterns</h2><p>Within cooperative multitasking, there is always a processing engine that is responsible for all I/O processing. It is called the Reactor after the design template name. The reactor interface says, “Give me a bunch of your sockets and your callbacks, and when that socket is ready for I/O, I will call your callback functions. A reactor job is to react to I/O events by delegating all the processing to the appropriate handler(worker). The handlers perform processing, so there is no need to block I/O, as long as handlers or callbacks for events are registered to take care of them.</p>
+<p>The purpose of the reactor design template is to avoid the common problem of creating a thread for each message, request, and connection. It receives events from multiple handlers and sequentially distributes them to the corresponding event handlers. In principle, the standard Reactor allows the application to be run with simultaneous events while maintaining the simplicity of single-thread processing. It would usually use non-blocking synchronous I/O(check out multiplexing in the I/O models). What is more interesting is the Proactor pattern. It’s an asynchronous version of the Reactor pattern. It usually uses true asynchronous I/O operations provided by the OS(check out AIO in the I/O models).</p>
+<p>But there are limitations to such an approach.</p>
+<p>Firstly by using this pattern, it limits the types of operations that you can perform on any supported platform. Reactors, on the other hand, can handle any event types. Secondly, there are buffer space limitations. A buffer has to be for each asynchronous operation for the duration of the I/O which can run basically forever. Those two paradigms underlie the nginx HTTP server, Node.js via libuv, Twisted Python, and the new asyncio libraries in Python.</p>
+<p>但没有一个方案是真正完美的。相互组合发挥的效果最好，因为cooperative multitasking通常会获胜，特别是当你的连接长时间挂起时。例如，一个web socket是一个持久的连接。如果你分配一个进程或一个线程来处理一个web socket，你就大大限制了一次对一个后端服务器的连接数量。而且由于连接会持续很长时间，所以保持许多同时连接是很重要的，同时每个连接都会有很少的工作要做。</p>
+<p>multitasking的问题是，它只能使用一个处理器核心。显然，你可以在同一台机器上运行一个应用程序的多个实例，尽管这并不总是方便的，也有其缺点）。) 因此，使用反应器/反应器运行多个进程，并在每个进程中使用合作多任务是个好主意。</p>
+<p>这种组合一方面可以使用我们系统中所有可用的处理器核心，另一方面，它可以在每个核心内部高效地工作，而不需要分配大量资源来处理每个单独的连接。</p>
 
   </div>
 </article>
@@ -194,7 +201,7 @@
     </div>
 
     <div id="toc-footer" style="display: none">
-      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Callbacks"><span class="toc-number">1.</span> <span class="toc-text">Callbacks</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cooperative-Threads"><span class="toc-number">2.</span> <span class="toc-text">Cooperative Threads</span></a></li></ol>
+      <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Callbacks"><span class="toc-number">1.</span> <span class="toc-text">Callbacks</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Cooperative-Threads"><span class="toc-number">2.</span> <span class="toc-text">Cooperative Threads</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Reactor-Proactor-patterns"><span class="toc-number">3.</span> <span class="toc-text">Reactor&#x2F;Proactor patterns</span></a></li></ol>
     </div>
 
     <div id="share-footer" style="display: none">
@@ -230,7 +237,7 @@
     Copyright &copy;
     
     
-    2016-2020
+    2016-2021
     Anki Yang
   </div>
   <div class="footer-right">
